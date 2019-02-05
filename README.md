@@ -13,3 +13,4 @@ This action requires you to register a new Unsplash application: https://unsplas
 
 - UNSPLASH_QUERY: Filter random photo with a search term.
 - UNSPLASH_ORIENTATION: Select photo orientation.
+- DEBUG: Print more information during the action execution.
