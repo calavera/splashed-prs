@@ -40,7 +40,7 @@ func main() {
 		log.Fatalf("Error opening GitHub event file: %q", err)
 	}
 
-	var pr *github.PullRequest
+	pr := &github.PullRequest{}
 	if err := json.NewDecoder(f).Decode(pr); err != nil {
 		log.Fatalf("Error decoding GitHub event: %q", err)
 	}
