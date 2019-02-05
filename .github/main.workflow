@@ -4,7 +4,7 @@ workflow "Splash PRs" {
 }
 
 action "calavera/splashed-prs@master" {
-  uses = "calavera/splashed-prs@master"
+  uses = "docker://calavera/splashed-prs:latest"
   secrets = ["GITHUB_TOKEN", "UNSPLASH_CLIENT_ID"]
   env = {
     UNSPLASH_QUERY = "cute animal"
