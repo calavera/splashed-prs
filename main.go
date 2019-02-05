@@ -15,6 +15,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
+type prWrap struct {
+	Action      string             `json:"action"`
+	Number      int                `json:"number"`
+	PullRequest github.PullRequest `json:"pull_request"`
+}
+
 type unsplashResponse struct {
 	URLs struct {
 		Regular string `json:"regular"`
@@ -40,23 +46,25 @@ func main() {
 		log.Fatalf("Error opening GitHub event file: %q", err)
 	}
 
-	var pr github.PullRequest
+	var pr prWrap
 	if err := json.NewDecoder(f).Decode(&pr); err != nil {
 		log.Fatalf("Error decoding GitHub event: %q", err)
 	}
 
-	state := *pr.State
+	var debug bool
 	if os.Getenv("DEBUG") != "" {
-		log.Printf("PR state: %s\n", state)
-		c, err := ioutil.ReadFile("/github/workflow/event.json")
+		debug = true
+
+		c, err := ioutil.ReadFile(eventPath)
 		if err != nil {
 			log.Fatal(err)
 		}
 		log.Printf(string(c))
+		log.Printf("%q\n", pr)
 	}
 
-	if state != "open" {
-		log.Printf("Ignore GitHub event state: %q", state)
+	if pr.Action != "open" && !debug {
+		log.Printf("Ignore GitHub event state: %q", pr.Action)
 		return
 	}
 
@@ -64,16 +72,24 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error parsing Unsplash URL: %q", err)
 	}
+
+	q := u.Query()
 	query := os.Getenv("UNSPLASH_QUERY")
 	if query != "" {
-		u.Query().Set("query", url.QueryEscape(query))
+		q.Set("query", query)
 	}
 	orientation := os.Getenv("UNSPLASH_ORIENTATION")
 	if orientation != "" {
-		u.Query().Set("orientation", orientation)
+		q.Set("orientation", orientation)
 	}
 
-	req, err := http.NewRequest("GET", u.String(), nil)
+	u.RawQuery = q.Encode()
+	us := u.String()
+	if debug {
+		log.Printf("Unsplash URL: %s", us)
+	}
+
+	req, err := http.NewRequest("GET", us, nil)
 	if err != nil {
 		log.Fatalf("Error fetching photo from Unsplash: %q", err)
 	}
@@ -92,9 +108,9 @@ func main() {
 		log.Fatalf("Error decoding photo from Unsplash: %q", err)
 	}
 
-	body := *pr.Body
-	body += fmt.Sprintf("\n\n![](%s)\n> Photo by [%s](%s) on [Unsplash](%s)", ur.URLs.Regular, ur.User.Name, ur.User.Links.HTML)
-	pr.Body = github.String(body)
+	body := *pr.PullRequest.Body
+	body += fmt.Sprintf("\n\n![](%s)\n> Photo by [%s](%s?utm_source=splashed_pull_requests&utm_medium=referral) on [Unsplash](https://unsplash.com?utm_source=splashed_pull_requests&utm_medium=referral)", ur.URLs.Regular, ur.User.Name, ur.User.Links.HTML)
+	pr.PullRequest.Body = github.String(body)
 
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -104,7 +120,7 @@ func main() {
 	client := github.NewClient(tc)
 
 	repo := strings.SplitN(os.Getenv("GITHUB_REPOSITORY"), "/", 2)
-	if _, _, err := client.PullRequests.Edit(ctx, repo[0], repo[1], *pr.Number, &pr); err != nil {
+	if _, _, err := client.PullRequests.Edit(ctx, repo[0], repo[1], pr.Number, &pr.PullRequest); err != nil {
 		log.Fatalf("Error updating the Pull Request with the photo: %q", err)
 	}
 }
