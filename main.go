@@ -40,13 +40,18 @@ func main() {
 		log.Fatalf("Error opening GitHub event file: %q", err)
 	}
 
-	var pr github.PullRequest
-	if err := json.NewDecoder(f).Decode(&pr); err != nil {
+	var pr *github.PullRequest
+	if err := json.NewDecoder(f).Decode(pr); err != nil {
 		log.Fatalf("Error decoding GitHub event: %q", err)
 	}
 
-	state := *pr.State
+	var debug bool
 	if os.Getenv("DEBUG") != "" {
+		debug = true
+	}
+
+	state := *pr.State
+	if debug {
 		log.Printf("PR state: %s\n", state)
 		c, err := ioutil.ReadFile("/github/workflow/event.json")
 		if err != nil {
@@ -55,7 +60,7 @@ func main() {
 		log.Printf(string(c))
 	}
 
-	if state != "open" {
+	if state != "open" && !debug {
 		log.Printf("Ignore GitHub event state: %q", state)
 		return
 	}
@@ -104,7 +109,7 @@ func main() {
 	client := github.NewClient(tc)
 
 	repo := strings.SplitN(os.Getenv("GITHUB_REPOSITORY"), "/", 2)
-	if _, _, err := client.PullRequests.Edit(ctx, repo[0], repo[1], *pr.Number, &pr); err != nil {
+	if _, _, err := client.PullRequests.Edit(ctx, repo[0], repo[1], *pr.Number, pr); err != nil {
 		log.Fatalf("Error updating the Pull Request with the photo: %q", err)
 	}
 }
