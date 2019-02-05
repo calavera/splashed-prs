@@ -8,7 +8,6 @@ action "calavera/splashed-prs@master" {
   secrets = ["GITHUB_TOKEN", "UNSPLASH_CLIENT_ID"]
   env = {
     UNSPLASH_QUERY = "cute animal"
-    UNSPLASH_ORIENTATION = "portrait"
-    DEBUG = "true"
+    UNSPLASH_ORIENTATION = "landscape"
   }
 }

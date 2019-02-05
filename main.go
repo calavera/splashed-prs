@@ -54,14 +54,13 @@ func main() {
 	var debug bool
 	if os.Getenv("DEBUG") != "" {
 		debug = true
-		c, err := ioutil.ReadFile("/github/workflow/event.json")
+
+		c, err := ioutil.ReadFile(eventPath)
 		if err != nil {
 			log.Fatal(err)
 		}
 		log.Printf(string(c))
-
 		log.Printf("%q\n", pr)
-		log.Printf("%q\n", pr.PullRequest.State)
 	}
 
 	if pr.Action != "open" && !debug {
