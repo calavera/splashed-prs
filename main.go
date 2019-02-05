@@ -48,11 +48,8 @@ func main() {
 	var debug bool
 	if os.Getenv("DEBUG") != "" {
 		debug = true
-	}
-
-	state := *pr.State
-	if debug {
-		log.Printf("PR state: %s\n", state)
+		log.Printf("%q\n", pr)
+		log.Printf("%q\n", pr.State)
 		c, err := ioutil.ReadFile("/github/workflow/event.json")
 		if err != nil {
 			log.Fatal(err)
@@ -60,6 +57,7 @@ func main() {
 		log.Printf(string(c))
 	}
 
+	state := *pr.State
 	if state != "open" && !debug {
 		log.Printf("Ignore GitHub event state: %q", state)
 		return
