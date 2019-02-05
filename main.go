@@ -48,13 +48,14 @@ func main() {
 	var debug bool
 	if os.Getenv("DEBUG") != "" {
 		debug = true
-		log.Printf("%q\n", pr)
-		log.Printf("%q\n", pr.State)
 		c, err := ioutil.ReadFile("/github/workflow/event.json")
 		if err != nil {
 			log.Fatal(err)
 		}
 		log.Printf(string(c))
+
+		log.Printf("%q\n", pr)
+		log.Printf("%q\n", pr.State)
 	}
 
 	state := *pr.State
