@@ -9,5 +9,6 @@ action "calavera/splashed-prs@master" {
   env = {
     UNSPLASH_QUERY = "cute animal"
     UNSPLASH_ORIENTATION = "portrait"
+    DEBUG = "true"
   }
 }
