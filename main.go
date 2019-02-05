@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -29,6 +30,7 @@ type unsplashResponse struct {
 func main() {
 	eventName := os.Getenv("GITHUB_EVENT_NAME")
 	if eventName != "pull_request" {
+		log.Printf("Ignore GitHub event: %q", eventName)
 		return
 	}
 
@@ -43,7 +45,18 @@ func main() {
 		log.Fatalf("Error decoding GitHub event: %q", err)
 	}
 
-	if pr.State != github.String("open") {
+	state := *pr.State
+	if os.Getenv("DEBUG") != "" {
+		log.Printf("PR state: %s\n", state)
+		c, err := ioutil.ReadFile("/github/workflow/event.json")
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf(string(c))
+	}
+
+	if state != "open" {
+		log.Printf("Ignore GitHub event state: %q", state)
 		return
 	}
 
