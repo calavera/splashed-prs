@@ -63,7 +63,7 @@ func main() {
 		log.Printf("%q\n", pr)
 	}
 
-	if pr.Action != "open" && !debug {
+	if pr.Action != "opened" && !debug {
 		log.Printf("Ignore GitHub event state: %q", pr.Action)
 		return
 	}
