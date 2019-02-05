@@ -10,4 +10,4 @@ LABEL "com.github.actions.icon" "camera"
 LABEL "com.github.actions.color" "purple"
 
 COPY --from=builder /go/src/github.com/calavera/splashed_prs/dist/splashed_prs /
-CMD ["/splashed_prs"]
+ENTRYPOINT ["/splashed_prs"]
