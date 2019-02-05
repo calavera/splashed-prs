@@ -15,6 +15,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
+type prWrap struct {
+	Action      string             `json:"action"`
+	Number      int                `json:"number"`
+	PullRequest github.PullRequest `json:"pull_request"`
+}
+
 type unsplashResponse struct {
 	URLs struct {
 		Regular string `json:"regular"`
@@ -40,8 +46,8 @@ func main() {
 		log.Fatalf("Error opening GitHub event file: %q", err)
 	}
 
-	pr := &github.PullRequest{}
-	if err := json.NewDecoder(f).Decode(pr); err != nil {
+	var pr prWrap
+	if err := json.NewDecoder(f).Decode(&pr); err != nil {
 		log.Fatalf("Error decoding GitHub event: %q", err)
 	}
 
@@ -55,12 +61,11 @@ func main() {
 		log.Printf(string(c))
 
 		log.Printf("%q\n", pr)
-		log.Printf("%q\n", pr.State)
+		log.Printf("%q\n", pr.PullRequest.State)
 	}
 
-	state := *pr.State
-	if state != "open" && !debug {
-		log.Printf("Ignore GitHub event state: %q", state)
+	if pr.Action != "open" && !debug {
+		log.Printf("Ignore GitHub event state: %q", pr.Action)
 		return
 	}
 
@@ -96,9 +101,9 @@ func main() {
 		log.Fatalf("Error decoding photo from Unsplash: %q", err)
 	}
 
-	body := *pr.Body
+	body := *pr.PullRequest.Body
 	body += fmt.Sprintf("\n\n![](%s)\n> Photo by [%s](%s) on [Unsplash](%s)", ur.URLs.Regular, ur.User.Name, ur.User.Links.HTML)
-	pr.Body = github.String(body)
+	pr.PullRequest.Body = github.String(body)
 
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -108,7 +113,7 @@ func main() {
 	client := github.NewClient(tc)
 
 	repo := strings.SplitN(os.Getenv("GITHUB_REPOSITORY"), "/", 2)
-	if _, _, err := client.PullRequests.Edit(ctx, repo[0], repo[1], *pr.Number, pr); err != nil {
+	if _, _, err := client.PullRequests.Edit(ctx, repo[0], repo[1], pr.Number, &pr.PullRequest); err != nil {
 		log.Fatalf("Error updating the Pull Request with the photo: %q", err)
 	}
 }
