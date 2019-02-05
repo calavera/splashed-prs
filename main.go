@@ -73,16 +73,24 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error parsing Unsplash URL: %q", err)
 	}
+
+	q := u.Query()
 	query := os.Getenv("UNSPLASH_QUERY")
 	if query != "" {
-		u.Query().Set("query", url.QueryEscape(query))
+		q.Set("query", query)
 	}
 	orientation := os.Getenv("UNSPLASH_ORIENTATION")
 	if orientation != "" {
-		u.Query().Set("orientation", orientation)
+		q.Set("orientation", orientation)
 	}
 
-	req, err := http.NewRequest("GET", u.String(), nil)
+	u.RawQuery = q.Encode()
+	us := u.String()
+	if debug {
+		log.Printf("Unsplash URL: %s", us)
+	}
+
+	req, err := http.NewRequest("GET", us, nil)
 	if err != nil {
 		log.Fatalf("Error fetching photo from Unsplash: %q", err)
 	}
@@ -102,7 +110,7 @@ func main() {
 	}
 
 	body := *pr.PullRequest.Body
-	body += fmt.Sprintf("\n\n![](%s)\n> Photo by [%s](%s) on [Unsplash](%s)", ur.URLs.Regular, ur.User.Name, ur.User.Links.HTML)
+	body += fmt.Sprintf("\n\n![](%s)\n> Photo by [%s](%s?utm_source=splashed_pull_requests&utm_medium=referral) on [Unsplash](https://unsplash.com?utm_source=splashed_pull_requests&utm_medium=referral)", ur.URLs.Regular, ur.User.Name, ur.User.Links.HTML)
 	pr.PullRequest.Body = github.String(body)
 
 	ctx := context.Background()
