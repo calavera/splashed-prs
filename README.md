@@ -11,5 +11,5 @@ This action requires you to register a new Unsplash application: https://unsplas
 
 ### Environment variables
 
-UNSPLASH_QUERY: Filter random photo with a search term.
-UNSPLASH_ORIENTATION: Select photo orientation.
+- UNSPLASH_QUERY: Filter random photo with a search term.
+- UNSPLASH_ORIENTATION: Select photo orientation.
